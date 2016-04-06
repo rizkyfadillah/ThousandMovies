@@ -82,6 +82,8 @@ public class MainActivityFragment extends Fragment {
                 null  // sort order
         );
 
+        //asdf
+
         if(!cursor.moveToFirst()) {
             loadAPI();
             Toast.makeText(getContext(), "Database belum ada", Toast.LENGTH_SHORT);
