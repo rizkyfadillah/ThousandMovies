@@ -3,8 +3,10 @@ package com.glkrenx.android.thousandmovies;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
+import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
+import android.graphics.drawable.Drawable;
 import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
@@ -13,12 +15,15 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.GridView;
+import android.widget.Toast;
 
 import com.glkrenx.android.thousandmovies.api.APIServices;
 import com.glkrenx.android.thousandmovies.db.MoviesDb;
 import com.glkrenx.android.thousandmovies.db.MoviesDbHelper;
 import com.glkrenx.android.thousandmovies.model.Movies;
 import com.glkrenx.android.thousandmovies.model.Result;
+import com.squareup.picasso.Picasso;
+import com.squareup.picasso.Target;
 
 import java.io.File;
 import java.io.FileOutputStream;
@@ -58,9 +63,6 @@ public class MainActivityFragment extends Fragment {
         dbHelper = new MoviesDbHelper(getActivity());
         db = dbHelper.getWritableDatabase();
 
-        /*GridView gridView = (GridView)rootView.findViewById(R.id.gridview);
-        gridView.setAdapter(new ImageAdapter(getActivity(), movies));*/
-
         gridView = (GridView) rootView.findViewById(R.id.gridview);
 
         poster = new String[30];
@@ -70,30 +72,22 @@ public class MainActivityFragment extends Fragment {
         deskripsi = new String[30];
         rating = new String[30];
 
-        /*Cursor cursor = db.query(
+        Cursor cursor = db.query(
                 MoviesDb.Movies.TABLE_NAME,  // Table to Query
-                null, // all columns
-                null, // Columns for the "where" clause
-                null, // Values for the "where" clause
+                null, // leaving "columns" null just returns all the columns.
+                null, // cols for "where" clause
+                null, // values for "where" clause
                 null, // columns to group by
                 null, // columns to filter by row groups
-                null // sort order
+                null  // sort order
         );
-*/
-        /*if(cursor.moveToFirst()){
-            Log.d("TAG", cursor.getString(cursor.getColumnIndex(MoviesDb.Movies.COLUMN_DESKRIPSI)));
-        }*/
 
-        /*if (!cursor.moveToFirst()){
+        if(!cursor.moveToFirst()) {
             loadAPI();
-            Log.d("TAG", "Database kosong");
-        } else {
-            Toast.makeText(getActivity(), "DATABASE ADA", Toast.LENGTH_SHORT).show();
-            Log.d("TAG", "Database ada");
-            loadAPI();
-        }*/
-
-        loadAPI();
+            Toast.makeText(getContext(), "Database belum ada", Toast.LENGTH_SHORT);
+        }
+        else
+            Toast.makeText(getContext(), "Database sudah ada", Toast.LENGTH_SHORT);
 
         return rootView;
     }
@@ -123,15 +117,13 @@ public class MainActivityFragment extends Fragment {
                         genre[i] = "daw";
                         path = "sdf";
 
-                        insertMovies(title[i], tahun[i], deskripsi[i], rating[i], genre[i], path);
-
                         Log.d("TAG-TITLE", title[i]);
                         Log.d("TAG-POSTER", poster[i]);
 
                         movies.add(poster[i]);
                     }
 
-                    /*for(int i=0; i<query.getResults().size(); i++){
+                    for(int i=0; i<query.getResults().size(); i++){
                         final int finalI = i;
                         Picasso.with(getActivity()).load(poster[i]).into(new Target(){
 
@@ -156,7 +148,7 @@ public class MainActivityFragment extends Fragment {
                                 Log.d("TAG", "Prepare Load");
                             }
                         });
-                    }*/
+                    }
 
                     gridView.setAdapter(new ImageAdapter(getActivity(), movies));
                 }
