@@ -18,6 +18,8 @@ public interface APIServices {
     Call<Movies> getMovies(@Query("page") int page,
                             @Query("api_key") String apiKey);
 
+
+
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(API_URL)
             .addConverterFactory(GsonConverterFactory.create())

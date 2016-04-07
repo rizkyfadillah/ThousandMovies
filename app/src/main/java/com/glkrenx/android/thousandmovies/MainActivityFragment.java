@@ -7,7 +7,6 @@ import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.graphics.Bitmap;
 import android.graphics.drawable.Drawable;
-import android.os.AsyncTask;
 import android.os.Bundle;
 import android.support.v4.app.Fragment;
 import android.util.Log;
@@ -47,6 +46,7 @@ public class MainActivityFragment extends Fragment {
     String path;
     MoviesDbHelper dbHelper;
     SQLiteDatabase db;
+    Target target;
 
     public MainActivityFragment() {
 
@@ -82,14 +82,31 @@ public class MainActivityFragment extends Fragment {
                 null  // sort order
         );
 
-        //asdf
-
-        if(!cursor.moveToFirst()) {
-            loadAPI();
-            Toast.makeText(getContext(), "Database belum ada", Toast.LENGTH_SHORT);
+        int counter = 0;
+        while(cursor.moveToNext()){
+            counter++;
         }
-        else
-            Toast.makeText(getContext(), "Database sudah ada", Toast.LENGTH_SHORT);
+
+        if(!cursor.moveToFirst() || counter<20) {
+            db.delete(MoviesDb.Movies.TABLE_NAME, null, null);
+            Toast.makeText(getContext(), "Database belum ada", Toast.LENGTH_SHORT).show();
+            loadAPI();
+        }
+        else {
+            Toast.makeText(getContext(), "Database sudah ada", Toast.LENGTH_SHORT).show();
+            while(cursor.moveToNext()){
+                movies.add(cursor.getString(cursor.getColumnIndexOrThrow("path")));
+            }
+            /*SimpleCursorAdapter adapter = new SimpleCursorAdapter(
+                    getContext(),          // Current context
+                    R.layout.grid_layout,  // Layout for a single row
+                    cursor,           // No Cursor yet
+                    null,      // Cursor columns to use
+                    Layout_Fiels,      // Layout fields to use
+                    0              // No flags
+            );*/
+            gridView.setAdapter(new ImageAdapter(getActivity(), movies, ImageAdapter.FLAG_PATH));
+        }
 
         return rootView;
     }
@@ -97,7 +114,6 @@ public class MainActivityFragment extends Fragment {
     @Override
     public void onStart() {
         super.onStart();
-
     }
 
     private void loadAPI(){
@@ -127,7 +143,8 @@ public class MainActivityFragment extends Fragment {
 
                     for(int i=0; i<query.getResults().size(); i++){
                         final int finalI = i;
-                        Picasso.with(getActivity()).load(poster[i]).into(new Target(){
+
+                        target = new Target(){
 
                             @Override
                             public void onBitmapLoaded(Bitmap bitmap, Picasso.LoadedFrom from) {
@@ -137,7 +154,7 @@ public class MainActivityFragment extends Fragment {
                                 if(path != null)
                                     insertMovies(title[finalI], tahun[finalI], deskripsi[finalI], rating[finalI], genre[finalI], path);
                                 else
-                                    Toast.makeText(getActivity(), "path null", Toast.LENGTH_SHORT);
+                                    Toast.makeText(getActivity(), "path null", Toast.LENGTH_SHORT).show();
                             }
 
                             @Override
@@ -149,10 +166,13 @@ public class MainActivityFragment extends Fragment {
                             public void onPrepareLoad(final Drawable placeHolderDrawable) {
                                 Log.d("TAG", "Prepare Load");
                             }
-                        });
+                        };
+
+                        Picasso.with(getActivity()).load(poster[i]).into(target);
+
                     }
 
-                    gridView.setAdapter(new ImageAdapter(getActivity(), movies));
+                    gridView.setAdapter(new ImageAdapter(getActivity(), movies, ImageAdapter.FLAG_URL));
                 }
             }
 
@@ -174,6 +194,9 @@ public class MainActivityFragment extends Fragment {
 
         long locationRowId;
         locationRowId = db.insert(MoviesDb.Movies.TABLE_NAME, null, testValues);
+
+        if(locationRowId != -1)
+            Toast.makeText(getActivity(), "Database masuk", Toast.LENGTH_SHORT).show();
     }
 
     private String saveToInternalStorage(Bitmap bitmapImage, String title){
@@ -198,22 +221,6 @@ public class MainActivityFragment extends Fragment {
             }
         }
         return mypath.getAbsolutePath();
-    }
-
-    public class GetImages extends AsyncTask<Void, Void, Void>{
-
-        @Override
-        protected Void doInBackground(Void... params) {
-            return null;
-        }
-
-        @Override
-        protected void onPostExecute(Void result) {
-            if (result != null) {
-
-                // New data is back from the server.  Hooray!
-            }
-        }
     }
 
     @Override
