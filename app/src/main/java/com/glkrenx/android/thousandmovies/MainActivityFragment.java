@@ -61,9 +61,12 @@ public class MainActivityFragment extends Fragment {
     private Cursor cursor;
     private int flag;
     private ProgressDialog pDialog;
+    boolean cek = false;
 
     public static final int FLAG_DATABASE = 0;
     public static final int FLAG_INTERNET = 1;
+
+    File directory;
 
     public MainActivityFragment() {
 
@@ -101,7 +104,12 @@ public class MainActivityFragment extends Fragment {
                 result.setPosterPath(paaath[position]);
                 result.setVoteCount(Integer.valueOf(rating[position]));
 
-                listener.onMoviesItemSelected(result, flag);
+                if(cek==false) {
+                    Toast.makeText(getActivity(),"Download Data Belum Selesai",Toast.LENGTH_SHORT).show();
+                }
+                else{
+                    listener.onMoviesItemSelected(result, flag);
+                }
             }
         });
 
@@ -155,7 +163,7 @@ public class MainActivityFragment extends Fragment {
         }
 
         if(isNetworkConnected()){
-            db.delete(MoviesDb.Movies.TABLE_NAME, null, null);
+            db.delete(MoviesDb.Movies.TABLE_NAME,null,null);
             loadAPI();
         } else if(!isNetworkConnected() & !cursor.moveToFirst() || counter<20) {
             Toast.makeText(getContext(), "Database belum ada dan tidak ada koneksi. Aktifkan terlebih dahulu internet anda.", Toast.LENGTH_SHORT).show();
@@ -163,6 +171,7 @@ public class MainActivityFragment extends Fragment {
             Toast.makeText(getContext(), "Tidak ada koneksi internet. Maka akan menggunakan database.", Toast.LENGTH_SHORT).show();
             gunakanDatabase();
         }
+
     }
 
     private boolean isNetworkConnected() {
@@ -285,7 +294,7 @@ public class MainActivityFragment extends Fragment {
     private String saveToInternalStorage(Bitmap bitmapImage, String title){
         ContextWrapper cw = new ContextWrapper(getActivity());
         // path to /data/data/yourapp/app_data/imageDir
-        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
         // Create imageDir
         File mypath = new File(directory, title+".jpg");
 
@@ -318,6 +327,7 @@ public class MainActivityFragment extends Fragment {
         super.onDestroy();
         cursor.close();
         dbHelper.close();
+
     }
 
     private class DownloadImages extends AsyncTask<String,Void,Bitmap[]> {
@@ -450,12 +460,12 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected void onPostExecute(Bitmap[] bitmaps) {
             super.onPostExecute(bitmaps);
-            /*if(bitmaps != null){
 
-            } else {
-                Toast.makeText(getContext(), "Downloading Image Failed", Toast.LENGTH_SHORT).show();
-            }*/
+            Toast.makeText(getContext(), "Downloading Image Success", Toast.LENGTH_SHORT).show();
+            //dbHelper.close();
+            cek = true;
             //pDialog.dismiss();
+
         }
     }
 }
