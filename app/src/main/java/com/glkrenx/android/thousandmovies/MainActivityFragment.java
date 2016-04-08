@@ -1,5 +1,6 @@
 package com.glkrenx.android.thousandmovies;
 
+import android.app.ProgressDialog;
 import android.content.ContentValues;
 import android.content.Context;
 import android.content.ContextWrapper;
@@ -27,10 +28,16 @@ import com.glkrenx.android.thousandmovies.db.MoviesDbHelper;
 import com.glkrenx.android.thousandmovies.model.Movies;
 import com.glkrenx.android.thousandmovies.model.Result;
 
+import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.net.HttpURLConnection;
 import java.net.URL;
+import java.net.URLConnection;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -44,17 +51,16 @@ import retrofit2.Response;
  */
 public class MainActivityFragment extends Fragment {
 
-    List<String> movies;
-    GridView gridView;
-    String [] title, poster, tahun, deskripsi, rating, genre, paaath;
-    String path;
-    MoviesDbHelper dbHelper;
-    SQLiteDatabase db;
-    Call<Movies> moviesCall;
+    private List<String> movies;
+    private GridView gridView;
+    private String [] title, poster, tahun, deskripsi, rating, genre, paaath;
+    private MoviesDbHelper dbHelper;
+    private SQLiteDatabase db;
+    private Call<Movies> moviesCall;
     private OnItemSelectedListener listener;
-    Cursor cursor;
-    int flag;
-    boolean gunakanDatabase;
+    private Cursor cursor;
+    private int flag;
+    private ProgressDialog pDialog;
 
     public static final int FLAG_DATABASE = 0;
     public static final int FLAG_INTERNET = 1;
@@ -87,19 +93,15 @@ public class MainActivityFragment extends Fragment {
         gridView.setOnItemClickListener(new AdapterView.OnItemClickListener() {
             @Override
             public void onItemClick(AdapterView<?> parent, View view, int position, long id) {
-                // CursorAdapter returns a cursor at the correct position for getItem(), or null
-                // if it cannot seek to that position.
-                //Cursor cursor = (Cursor) parent.getItemAtPosition(position);
                 Result result = new Result();
-                //result.setPosterPath(cursor.getString(cursor.getColumnIndexOrThrow("path")));
+
                 result.setTitle(title[position]);
                 result.setOverview(deskripsi[position]);
                 result.setReleaseDate(tahun[position]);
                 result.setPosterPath(paaath[position]);
                 result.setVoteCount(Integer.valueOf(rating[position]));
-                //result.setPosterPath(cursor.getString(cursor.getColumnIndexOrThrow("path")));
-                listener.onMoviesItemSelected(result, flag);
 
+                listener.onMoviesItemSelected(result, flag);
             }
         });
 
@@ -113,13 +115,22 @@ public class MainActivityFragment extends Fragment {
                 null  // sort order
         );
 
+        /*Result result = new Result();
+
+        result.setTitle(title[0]);
+        result.setOverview(deskripsi[0]);
+        result.setReleaseDate(tahun[0]);
+        result.setPosterPath(paaath[0]);
+        result.setVoteCount(Integer.valueOf(rating[0]));
+
+        listener.onMoviesItemSelected(result, flag);*/
+
         return rootView;
     }
 
     private void gunakanDatabase() {
         Toast.makeText(getContext(), "Menggunakan data dari database", Toast.LENGTH_SHORT).show();
         int counter = 0;
-        //cursor.moveToFirst();
         while(cursor.moveToNext()){
             movies.add(cursor.getString(cursor.getColumnIndexOrThrow("path")));
             title[counter] = cursor.getString(cursor.getColumnIndexOrThrow("title"));
@@ -224,7 +235,10 @@ public class MainActivityFragment extends Fragment {
 
 
     private void loadAPI(){
-        db.delete(MoviesDb.Movies.TABLE_NAME, null,null);
+        Toast.makeText(getContext(), "Load API", Toast.LENGTH_SHORT).show();
+
+        //db.delete(MoviesDb.Movies.TABLE_NAME, null, null);
+        deletePoster();
 
         SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
 
@@ -260,10 +274,12 @@ public class MainActivityFragment extends Fragment {
 
                         movies.add(poster[i]);
                     }
+                    flag = FLAG_INTERNET;
+
+                    gridView.setAdapter(new ImageAdapter(getActivity(), movies, ImageAdapter.FLAG_URL));
 
                     DownloadImages downloadImages = new DownloadImages(poster, title, tahun, deskripsi, rating, genre);
                     downloadImages.execute();
-                    gridView.setAdapter(new ImageAdapter(getActivity(), movies, ImageAdapter.FLAG_URL));
                 }
             }
 
@@ -318,7 +334,7 @@ public class MainActivityFragment extends Fragment {
         // path to /data/data/yourapp/app_data/imageDir
         File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
         // Create imageDir
-        File mypath=new File(directory, title+".jpg");
+        File mypath = new File(directory, title+".jpg");
 
         FileOutputStream fos = null;
         try {
@@ -337,6 +353,13 @@ public class MainActivityFragment extends Fragment {
         return mypath.getAbsolutePath();
     }
 
+    public void deletePoster(){
+        ContextWrapper cw = new ContextWrapper(getActivity());
+        // path to /data/data/yourapp/app_data/imageDir
+        File directory = cw.getDir("imageDir", Context.MODE_PRIVATE);
+        boolean delete = directory.delete();
+    }
+
     @Override
     public void onDestroy() {
         super.onDestroy();
@@ -349,6 +372,8 @@ public class MainActivityFragment extends Fragment {
         String [] linkPoster;
         String [] title, tahun, deskripsi, rating, genre;
 
+        private final String LOG_TAG = DownloadImages.class.getSimpleName();
+
         public DownloadImages(String [] linkPoster, String [] title, String [] tahun, String [] deskripsi, String [] rating, String [] genre){
             this.linkPoster = linkPoster;
             this.title=title;
@@ -358,16 +383,102 @@ public class MainActivityFragment extends Fragment {
             this.genre=genre;
         }
 
+        @Override
+        protected void onPreExecute() {
+            super.onPreExecute();
+            System.out.println("Starting download");
+
+            /*pDialog = new ProgressDialog(getContext());
+            pDialog.setMessage("Downloading images... Please wait...");
+            pDialog.setIndeterminate(false);
+            pDialog.setCancelable(true);*/
+            //pDialog.show();
+        }
+
+        public Bitmap downloadImage(String urlString){
+            int count = 0;
+            Bitmap bitmap = null;
+
+            URL url;
+            InputStream inputStream = null;
+            BufferedOutputStream outputStream = null;
+
+            try {
+                url = new URL(urlString);
+                URLConnection connection = url.openConnection();
+                int lenghtOfFile = connection.getContentLength();
+
+                inputStream = new BufferedInputStream(url.openStream());
+                ByteArrayOutputStream dataStream = new ByteArrayOutputStream();
+
+                outputStream = new BufferedOutputStream(dataStream);
+
+                byte data[] = new byte[512];
+                long total = 0;
+
+                while ((count = inputStream.read(data)) != -1) {
+                    total += count;
+		            /*publishing progress update on UI thread.
+		            Invokes onProgressUpdate()*/
+                    //publishProgress((int)((total*100)/lenghtOfFile));
+
+                    // writing data to byte array stream
+                    outputStream.write(data, 0, count);
+                }
+                outputStream.flush();
+
+                BitmapFactory.Options bmOptions = new BitmapFactory.Options();
+                bmOptions.inSampleSize = 1;
+
+                byte[] bytes = dataStream.toByteArray();
+                bitmap = BitmapFactory.decodeByteArray(bytes, 0, bytes.length,bmOptions);
+
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                try {
+                    if (inputStream != null) {
+                        inputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+                try {
+                    if (outputStream != null) {
+                        outputStream.close();
+                    }
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+            }
+            return bitmap;
+        }
+
         private Bitmap [] DownloadImageBitmap() {
 
             Bitmap [] bitmaps = new Bitmap[30];
+            HttpURLConnection urlConnection = null;
 
             for(int i=0; i<linkPoster.length; i++){
+                //Log.d(LOG_TAG, poster[i]);
                 try {
-                    URL imageURL = new URL(poster[i]);
-                    bitmaps[i] = BitmapFactory.decodeStream(imageURL.openStream());
+                    URL url = new URL(poster[i]);
+
+                    urlConnection = (HttpURLConnection) url.openConnection();
+                    urlConnection.setRequestMethod("GET");
+                    urlConnection.connect();
+
+                    bitmaps[i] = BitmapFactory.decodeStream(url.openStream());
+
+                    paaath[i] = saveToInternalStorage(bitmaps[i], title[i]);
+                    insertMovies(title[i], tahun[i], deskripsi[i], rating[i], genre[i], paaath[i]);
                 } catch (IOException e) {
                     Log.e("error", "Downloading Image Failed");
+                    return null;
+                } finally {
+                    if (urlConnection != null) {
+                        urlConnection.disconnect();
+                    }
                 }
             }
             return bitmaps;
@@ -376,16 +487,22 @@ public class MainActivityFragment extends Fragment {
         @Override
         protected Bitmap [] doInBackground(String... params) {
             return DownloadImageBitmap();
+            /*Bitmap [] bitmap = new Bitmap[30];
+            for(int i=0; i<linkPoster.length; i++){
+                bitmap[i] = downloadImage(linkPoster[i]);
+            }
+            return bitmap;*/
         }
 
         @Override
         protected void onPostExecute(Bitmap[] bitmaps) {
             super.onPostExecute(bitmaps);
-            for(int i=0; i<bitmaps.length; i++){
-                path = saveToInternalStorage(bitmaps[i], title[i]);
-                paaath[i] = saveToInternalStorage(bitmaps[i], title[i]);
-                insertMovies(title[i], tahun[i], deskripsi[i], rating[i], genre[i], path);
-            }
+            /*if(bitmaps != null){
+
+            } else {
+                Toast.makeText(getContext(), "Downloading Image Failed", Toast.LENGTH_SHORT).show();
+            }*/
+            //pDialog.dismiss();
         }
     }
 }

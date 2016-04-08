@@ -10,8 +10,6 @@ import android.widget.TextView;
 
 import com.squareup.picasso.Picasso;
 
-import java.io.File;
-
 /**
  * A placeholder fragment containing a simple view.
  */
@@ -45,9 +43,9 @@ public class DetailActivityFragment extends Fragment {
         titleTextView.setText(title);
         tahunTextView.setText(tahun);
         ratingTextView.setText(rating);
-        if(flag == MainActivityFragment.FLAG_DATABASE)
-            Picasso.with(getContext()).load(new File(path)).into(poster);
-        else
+        //if(flag == MainActivityFragment.FLAG_DATABASE)
+            //Picasso.with(getContext()).load(new File(path)).into(poster);
+        //else
             Picasso.with(getContext()).load(path).into(poster);
 
         return rootview;
