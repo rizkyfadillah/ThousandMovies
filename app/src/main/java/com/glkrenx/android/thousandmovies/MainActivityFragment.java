@@ -155,6 +155,7 @@ public class MainActivityFragment extends Fragment {
         }
 
         if(isNetworkConnected()){
+            db.delete(MoviesDb.Movies.TABLE_NAME, null, null);
             loadAPI();
         } else if(!isNetworkConnected() & !cursor.moveToFirst() || counter<20) {
             Toast.makeText(getContext(), "Database belum ada dan tidak ada koneksi. Aktifkan terlebih dahulu internet anda.", Toast.LENGTH_SHORT).show();
