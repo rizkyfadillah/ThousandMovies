@@ -2,5 +2,24 @@
     <string name="app_name">Thousand Movies</string>
     <string name="action_settings">Settings</string>
     <string name="page" translatable="false">1</string>
-    <string name="title_activity_detail">DetailActivity</string>
+    <string name="title_activity_detail">Detail Movie</string>
+
+    <!--Sort By Option Settings-->
+    <string name="pref_sort_label">Sort By</string>
+    <string name="pref_sort_key" translatable="false">Sort By</string>
+    <string name="pref_sort_popularity_default" translatable="false">Any</string>
+    <string name="pref_sort_popularity_desc" translatable="false">Popularity Descending</string>
+    <string name="pref_sort_popularity_asc" translatable="false">Popularity Ascending</string>
+    <string name="pref_sort_popularity_value_default" translatable="false"></string>
+    <string name="pref_sort_popularity_value_desc" translatable="false">popularity.desc</string>
+    <string name="pref_sort_popularity_value_asc" translatable="false">popularity.asc</string>
+    <!--Year Option Settings-->
+    <string name="pref_year_label">Year</string>
+    <string name="pref_year_key" translatable="false">Year</string>
+    <string name="pref_year_value_default" translatable="false"></string>
+    <!--Genre Option Settings-->
+    <string name="pref_genre_label">Genre</string>
+    <string name="pref_genre_key">Genre</string>
+    <string name="pref_genre_value_default" translatable="false"></string>
+    <string name="title_activity_settings">Settings</string>
 </resources>

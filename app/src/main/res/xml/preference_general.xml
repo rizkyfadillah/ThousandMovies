@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="utf-8"?>
+<PreferenceScreen xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ListPreference
+        android:title="@string/pref_year_label"
+        android:key="@string/pref_year_key"
+        android:defaultValue="@string/pref_year_value_default"
+        android:entryValues="@array/pref_year_values"
+        android:entries="@array/pref_year_options"/>
+
+    <ListPreference
+        android:title="@string/pref_sort_label"
+        android:key="@string/pref_sort_key"
+        android:defaultValue="@string/pref_sort_popularity_value_default"
+        android:entryValues="@array/pref_sorts_values"
+        android:entries="@array/pref_sorts_options"/>
+
+    <ListPreference
+        android:title="@string/pref_genre_label"
+        android:key="@string/pref_genre_key"
+        android:defaultValue="@string/pref_genre_value_default"
+        android:entryValues="@array/pref_genre_values"
+        android:entries="@array/pref_genre_options"/>
+
+</PreferenceScreen>

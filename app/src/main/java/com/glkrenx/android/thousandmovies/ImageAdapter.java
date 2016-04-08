@@ -1,7 +1,6 @@
 package com.glkrenx.android.thousandmovies;
 
 import android.content.Context;
-import android.database.Cursor;
 import android.util.Log;
 import android.view.View;
 import android.view.ViewGroup;
@@ -22,7 +21,7 @@ public class ImageAdapter extends BaseAdapter {
 
     private Context mContext;
     private List<String> urls = new ArrayList<String>();
-    Cursor cursor;
+
     int flag;
     public static final int FLAG_URL = 0;
     public static final int FLAG_PATH = 1;
@@ -33,8 +32,7 @@ public class ImageAdapter extends BaseAdapter {
         this.urls = urls;
         // menambahkan data movies dan membuat acak urutannya (random order)
         Collections.addAll(urls);
-        Collections.shuffle(urls);
-
+        //Collections.shuffle(urls);
     }
 
     public int getCount() {
@@ -55,8 +53,8 @@ public class ImageAdapter extends BaseAdapter {
         if(imageView == null){
             //g ada imageView jadi buat yang baru
             imageView = new ImageView(mContext);
-            imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
-            imageView.setPadding(8, 110, 8, 8);
+            /*imageView.setScaleType(ImageView.ScaleType.CENTER_CROP);
+            imageView.setPadding(8, 110, 8, 8);*/
 
         }else {
             //jika ternyata sudah ada imageView, gunakan recycle view
@@ -71,16 +69,17 @@ public class ImageAdapter extends BaseAdapter {
         if(flag == FLAG_URL){
             Picasso.with(mContext)
                     .load(url)
+
+
                     .tag(mContext)
                     .into(imageView);
         } else {
             Picasso.with(mContext)
                     .load(new File(url))
+
                     .tag(mContext)
                     .into(imageView);
         }
-
-
         return imageView;
     }
 }

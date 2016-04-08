@@ -15,10 +15,37 @@ public interface APIServices {
     public static final String API_URL = "http://api.themoviedb.org/3/discover/";
 
     @GET("movie?")
-    Call<Movies> getMovies(@Query("page") int page,
-                            @Query("api_key") String apiKey);
+    Call<Movies> getMoviesFull(@Query("page") int page,
+                               @Query("api_key") String apiKey,
+                               @Query("sort_by") String sort_by,
+                               @Query("primary_release_year") String year,
+                               @Query("with_genres") String genre);
+    @GET("movie?")
+    Call<Movies> getMoviesDefault(@Query("page") int page,
+                                  @Query("api_key") String apiKey);
 
+    @GET("movie?")
+    Call<Movies> getMoviesSortBy(@Query("page") int page,
+                                 @Query("api_key") String apiKey,
+                                 @Query("sort_by") String sort_by,
+                                 @Query("with_genres") String genre);
 
+    @GET("movie?")
+    Call<Movies> getMoviesYear(@Query("page") int page,
+                               @Query("api_key") String apiKey,
+                               @Query("primary_release_year") String year,
+                               @Query("with_genres") String genre);
+
+    @GET("movie?")
+    Call<Movies> getMoviesGenre(@Query("page") int page,
+                                @Query("api_key") String apiKey,
+                                @Query("with_genres") String genre);
+
+    @GET("movie?")
+    Call<Movies> getMoviesSortYear(@Query("page") int page,
+                                   @Query("api_key") String apiKey,
+                                   @Query("sort_by") String sort_by,
+                                   @Query("primary_release_year") String year);
 
     Retrofit retrofit = new Retrofit.Builder()
             .baseUrl(API_URL)
