@@ -171,54 +171,6 @@ public class MainActivityFragment extends Fragment {
         return cm.getActiveNetworkInfo() != null;
     }
 
-    private void loadAPITanpaUpdateDatabase() {
-        SharedPreferences sharedPreferences = PreferenceManager.getDefaultSharedPreferences(getActivity());
-
-        String sorting = sharedPreferences.getString(getString(R.string.pref_sort_key),
-                getString(R.string.pref_sort_popularity_value_default));
-        String year = sharedPreferences.getString(getString(R.string.pref_year_key),
-                getString(R.string.pref_year_value_default));
-        String genres = sharedPreferences.getString(getString(R.string.pref_genre_key),
-                getString(R.string.pref_genre_value_default));
-
-        findData(genres, year, sorting);
-
-        movies.clear();
-
-        moviesCall.enqueue(new Callback<Movies>() {
-            @Override
-            public void onResponse(Call<Movies> call, Response<Movies> response) {
-                if (response.isSuccessful()) {
-                    Movies query = response.body();
-                    for (int i = 0; i < query.getResults().size(); i++) {
-                        Result result = query.getResults().get(i);
-
-                        if (result.getPosterPath() != null) {
-                            poster[i] = "https://image.tmdb.org/t/p/w185" + result.getPosterPath();
-                        } else {
-                            poster[i] = "https://assets.tmdb.org/assets/f996aa2014d2ffddfda8463c479898a3/images/no-poster-w185.jpg";
-                        }
-                        title[i] = result.getTitle();
-                        tahun[i] = result.getReleaseDate();
-                        deskripsi[i] = result.getOverview();
-                        rating[i] = String.valueOf(result.getVoteCount());
-                        genre[i] = "daw";
-                        paaath[i] = poster[i];
-
-                        movies.add(poster[i]);
-                    }
-                    flag = FLAG_INTERNET;
-                    gridView.setAdapter(new ImageAdapter(getActivity(), movies, ImageAdapter.FLAG_URL));
-                }
-            }
-
-            @Override
-            public void onFailure(Call<Movies> call, Throwable t) {
-
-            }
-        });
-    }
-
     public interface OnItemSelectedListener {
         public void onMoviesItemSelected(Result result, int flag);
     }
