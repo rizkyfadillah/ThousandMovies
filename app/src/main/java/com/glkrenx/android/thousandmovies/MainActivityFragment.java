@@ -414,6 +414,7 @@ public class MainActivityFragment extends Fragment {
                     e.printStackTrace();
                 }
             }
+            //tambahan
             return bitmap;
         }
 
